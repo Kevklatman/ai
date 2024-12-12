@@ -60,10 +60,13 @@ Build a machine learning model that predicts whether a PGA Tour player will fini
    - Handle categorical variables
    
 2. **First Model: Logistic Regression**
-   - Implement simple logistic regression
-   - Train the model
-   - Make predictions
-   - Evaluate basic performance
+   - Implemented logistic regression as baseline model
+   - Features used include: strokes gained metrics, fantasy points, player statistics
+   - Model evaluation metrics:
+     - Classification report
+     - Confusion matrix
+     - ROC curve
+     - Feature importance analysis
 
 ### Phase 3: Model Evaluation and Improvement
 1. **Performance Analysis**
@@ -122,6 +125,9 @@ ai/
 │   └── pga_tour_cleaned.csv  # Cleaned dataset with selected features
 ├── models/            # Different model implementations
 ├── notebooks/         # Jupyter notebooks for analysis
+│   ├── 1_data_analysis.ipynb
+│   ├── 2_data_preprocessing.ipynb
+│   └── 3_model_logistic_regression.ipynb
 └── utils/            # Helper functions and utilities
 ```
 

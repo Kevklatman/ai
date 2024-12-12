@@ -1,58 +1,43 @@
 # Notebooks Directory
 
-This directory contains Jupyter notebooks for interactive data analysis and model development.
+This directory contains Jupyter notebooks for the PGA Tour prediction project.
 
-## Purpose
-- Exploratory Data Analysis (EDA)
-- Feature Engineering experiments
-- Model training and evaluation
-- Results visualization
+## Notebooks Overview
 
-## Contents
+### 1. Data Analysis (`1_data_analysis.ipynb`)
+- Initial data exploration
+- Feature distributions and relationships
+- Correlation analysis
+- Target variable analysis
 
-### 1. Initial Data Analysis (1_initial_data_analysis.ipynb)
-#### Data Loading and Cleaning
-- Loaded PGA Tour dataset (2015-2022)
-- Handled missing values:
-  - Dropped empty columns (Unnamed: 2,3,4)
-  - Filled missing positions with 999
-  - Filled missing Strokes Gained metrics with median values
-  - Filled missing Finish values with 'Unknown'
+### 2. Data Preprocessing (`2_data_preprocessing.ipynb`)
+- Data cleaning and feature selection
+- Feature engineering
+- Train-test split (80-20)
+- Data scaling and normalization
+- Creation of processed datasets in `data/processed/`
 
-#### Target Variable Creation
-- Created binary 'is_top_10' variable (1 if position ≤ 10, 0 otherwise)
+### 3. Logistic Regression Model (`3_model_logistic_regression.ipynb`)
+- First model implementation using logistic regression
+- Features:
+  - Strokes gained metrics (total, tee-to-green)
+  - Fantasy points (FDP, DKP, SDP)
+  - Player statistics (made cuts, rounds played)
+- Model evaluation:
+  - Classification metrics
+  - Confusion matrix
+  - ROC curve analysis
+  - Feature importance visualization
 
-#### Correlation Analysis
-Strong Predictors (|correlation| > 0.5):
-- Fantasy points finish metrics (0.83-0.89)
-- Total fantasy points (0.50-0.54)
+## Running the Notebooks
+1. Start with `1_data_analysis.ipynb` for data understanding
+2. Run `2_data_preprocessing.ipynb` to prepare the data
+3. Execute `3_model_logistic_regression.ipynb` for model training and evaluation
 
-Moderate Predictors (0.3 < |correlation| < 0.5):
-- Streak and hole metrics (0.37-0.45)
-- sg_total (0.41)
-- sg_t2g (0.33)
-- pos (-0.31)
-
-Weak Predictors (|correlation| < 0.3):
-- Individual strokes gained metrics
-- Tournament characteristics
-- Player characteristics
-- Temporal features
-
-### 2. Data Preprocessing (2_data_preprocessing.ipynb)
-#### Feature Processing
-- Load cleaned dataset
-- Split into training and testing sets (80/20)
-- Scale features using StandardScaler
-- Save processed datasets for modeling
-
-### Next Steps
-1. Feature selection based on correlation analysis
-2. Feature engineering
-3. Model development and evaluation
-
-## Usage
-1. Start Jupyter notebook server
-2. Open notebooks in browser
-3. Run cells sequentially
-4. Experiment with different approaches
+## Dependencies
+Required Python packages:
+- pandas
+- numpy
+- scikit-learn
+- matplotlib
+- seaborn
