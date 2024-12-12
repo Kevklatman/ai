@@ -10,20 +10,48 @@ Build a machine learning model that predicts whether a PGA Tour player will fini
 - Evaluate model performance
 - Interpret results and improve the model
 
-## Project Roadmap
+## Current Progress
 
-### Phase 1: Data Exploration and Preparation
-1. **Initial Data Analysis** (`initial_set/`)
-   - Load and examine the PGA Tour dataset
-   - Understand available features
-   - Identify missing values
-   - Visualize basic statistics
-   
-2. **Feature Engineering**
-   - Create target variable (top 10 finish)
-   - Select relevant features
-   - Handle missing values
-   - Create derived features (e.g., recent performance metrics)
+### Phase 1: Data Exploration and Preparation ✅
+1. **Initial Data Analysis** (`notebooks/1_initial_data_analysis.ipynb`)
+   - ✅ Loaded and examined PGA Tour dataset (2015-2022)
+   - ✅ Handled missing values:
+     - Dropped empty columns (Unnamed: 2,3,4)
+     - Filled missing positions with 999
+     - Filled missing Strokes Gained metrics with median values
+     - Filled missing Finish values with 'Unknown'
+   - ✅ Created target variable (is_top_10)
+   - ✅ Analyzed feature correlations
+
+2. **Feature Selection Insights**
+   Strong Predictors (|correlation| > 0.5):
+   - Fantasy points finish metrics (0.83-0.89)
+   - Total fantasy points (0.50-0.54)
+
+   Moderate Predictors (0.3 < |correlation| < 0.5):
+   - Streak and hole metrics (0.37-0.45)
+   - sg_total (0.41)
+   - sg_t2g (0.33)
+   - pos (-0.31)
+
+   Weak Predictors (|correlation| < 0.3):
+   - Individual strokes gained metrics
+   - Tournament characteristics
+   - Player characteristics
+   - Temporal features
+
+### Next Immediate Steps
+1. Feature Engineering
+   - Create derived features from strong predictors
+   - Remove weak predictors
+   - Handle categorical variables
+
+2. Data Preprocessing
+   - Split data into training and testing sets
+   - Scale features
+   - Prepare for model training
+
+## Project Roadmap
 
 ### Phase 2: Basic Model Implementation
 1. **Data Preprocessing**
@@ -90,6 +118,8 @@ ai/
 ├── initial_set/        # Initial data exploration
 │   ├── README.md      # Data exploration documentation
 │   └── python.py      # Data analysis script
+├── data/              # Processed datasets
+│   └── pga_tour_cleaned.csv  # Cleaned dataset with selected features
 ├── models/            # Different model implementations
 ├── notebooks/         # Jupyter notebooks for analysis
 └── utils/            # Helper functions and utilities
@@ -113,11 +143,5 @@ ai/
 3. Run initial data analysis
 4. Follow along with each phase
 5. Experiment and modify as needed
-
-## Next Steps
-1. Complete initial data analysis
-2. Begin feature engineering
-3. Implement first model
-4. Evaluate and iterate
 
 Remember: The goal is not just to build a working model, but to understand each step of the machine learning process. Take time to experiment and understand why each step is important.
