@@ -29,12 +29,22 @@ def load_and_prepare_data():
     X = df[feature_cols]
     y = df['is_top_10']
     
+    # Store tournament info for later analysis
+    tournament_info = df[['tournament_id', 'player', 'date', 'is_top_10']]
+    
     # Print class distribution
     print("\nClass distribution in full dataset:")
     print(y.value_counts(normalize=True))
     
     # Split data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+    
+    # Also split tournament info
+    _, tournament_info_test = train_test_split(
+        tournament_info, test_size=0.2, random_state=42, stratify=y
+    )
     
     # Handle missing values
     imputer = SimpleImputer(strategy='mean')
@@ -46,7 +56,53 @@ def load_and_prepare_data():
     X_train_scaled = scaler.fit_transform(X_train_imputed)
     X_test_scaled = scaler.transform(X_test_imputed)
     
-    return X_train_scaled, X_test_scaled, y_train, y_test, feature_cols
+    return X_train_scaled, X_test_scaled, y_train, y_test, feature_cols, tournament_info_test
+
+def analyze_predictions_by_tournament(tournament_info, y_pred, y_pred_proba):
+    """Analyze how many players we're predicting for top 10 in each tournament."""
+    # Combine predictions with tournament info
+    predictions_df = pd.DataFrame({
+        'tournament_id': tournament_info['tournament_id'],
+        'player': tournament_info['player'],
+        'date': pd.to_datetime(tournament_info['date']),
+        'actual_top_10': tournament_info['is_top_10'],
+        'predicted_top_10': y_pred,
+        'predicted_probability': y_pred_proba
+    })
+    
+    # Group by tournament and analyze predictions
+    tournament_analysis = predictions_df.groupby('tournament_id').agg({
+        'player': 'count',  # Total players
+        'actual_top_10': 'sum',  # Actual number of top 10s
+        'predicted_top_10': 'sum'  # Predicted number of top 10s
+    }).reset_index()
+    
+    tournament_analysis.columns = ['tournament_id', 'total_players', 'actual_top_10s', 'predicted_top_10s']
+    
+    # Print summary statistics
+    print("\nPrediction Analysis by Tournament:")
+    print(f"Number of tournaments: {len(tournament_analysis)}")
+    print(f"Average players per tournament: {tournament_analysis['total_players'].mean():.1f}")
+    print(f"Average actual top 10s: {tournament_analysis['actual_top_10s'].mean():.1f}")
+    print(f"Average predicted top 10s: {tournament_analysis['predicted_top_10s'].mean():.1f}")
+    
+    # Show distribution of predicted top 10s
+    print("\nDistribution of predicted top 10s per tournament:")
+    print(tournament_analysis['predicted_top_10s'].value_counts().sort_index())
+    
+    # Plot distribution
+    plt.figure(figsize=(10, 6))
+    plt.hist(tournament_analysis['predicted_top_10s'], bins=20, alpha=0.5, label='Predicted')
+    plt.axvline(x=10, color='r', linestyle='--', label='Actual Top 10')
+    plt.xlabel('Number of Players Predicted for Top 10')
+    plt.ylabel('Number of Tournaments')
+    plt.title('Distribution of Predicted Top 10s per Tournament')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_DIR, 'predictions_per_tournament.png'))
+    plt.close()
+    
+    return predictions_df
 
 def train_and_evaluate_model(X_train, X_test, y_train, y_test):
     """Train logistic regression model and return predictions."""
@@ -67,12 +123,23 @@ def train_and_evaluate_model(X_train, X_test, y_train, y_test):
     )
     model.fit(X_train, y_train)
     
-    # Make predictions
+    # Make predictions with different thresholds
     y_pred_proba = model.predict_proba(X_test)[:, 1]
-    threshold = 0.3  # Lower threshold to catch more potential top 10 finishes
-    y_pred = (y_pred_proba >= threshold).astype(int)
     
-    return model, y_pred, y_pred_proba
+    thresholds = [0.3, 0.4, 0.5, 0.6, 0.7]
+    results = {}
+    
+    print("\nPerformance at different thresholds:")
+    for threshold in thresholds:
+        y_pred = (y_pred_proba >= threshold).astype(int)
+        results[threshold] = y_pred
+        print(f"\nThreshold: {threshold}")
+        print(classification_report(y_test, y_pred))
+    
+    # Use 0.5 as default threshold for final predictions
+    y_pred = (y_pred_proba >= 0.5).astype(int)
+    
+    return model, y_pred, y_pred_proba, results
 
 def plot_feature_importance(model, feature_names, output_path):
     """Plot feature importance."""
@@ -147,10 +214,13 @@ def plot_roc_curve(y_test, y_pred_proba, output_path):
 
 def main():
     # Load and prepare data
-    X_train, X_test, y_train, y_test, feature_cols = load_and_prepare_data()
+    X_train, X_test, y_train, y_test, feature_cols, tournament_info_test = load_and_prepare_data()
     
     # Train model and get predictions
-    model, y_pred, y_pred_proba = train_and_evaluate_model(X_train, X_test, y_train, y_test)
+    model, y_pred, y_pred_proba, threshold_results = train_and_evaluate_model(X_train, X_test, y_train, y_test)
+    
+    # Analyze predictions by tournament
+    predictions_df = analyze_predictions_by_tournament(tournament_info_test, y_pred, y_pred_proba)
     
     # Print classification report
     print("\nClassification Report:")
