@@ -68,6 +68,78 @@ plt.show()
 ```
 Creates plots to visualize tournament data and trends.
 
+## PGA Tour Statistics Explained
+
+### Overview
+This document explains the various statistics and metrics used in PGA Tour data analysis.
+
+### Fantasy Points
+- **FDP (FanDuel Points)**: Fantasy points awarded on FanDuel platform
+- **DKP (DraftKings Points)**: Fantasy points awarded on DraftKings platform
+- **SDP (SuperDraft Points)**: Fantasy points awarded on SuperDraft platform
+
+Each platform calculates points differently based on:
+- Tournament finish position
+- Birdies, eagles, and bogeys
+- Streak bonuses
+- Tournament importance
+
+### Strokes Gained Statistics
+Strokes Gained measures how many shots a player gains or loses compared to the field average in different aspects of the game.
+
+- **sg_total**: Overall strokes gained per round vs. field average
+- **sg_t2g (Tee-to-Green)**: Combined strokes gained in all aspects except putting
+- **sg_ott (Off-the-Tee)**: Strokes gained on tee shots
+- **sg_app (Approach)**: Strokes gained on approach shots
+- **sg_arg (Around-the-Green)**: Strokes gained on shots around the green
+- **sg_putt (Putting)**: Strokes gained on putts
+
+Example: A sg_total of +2.0 means a player performed 2 strokes better than the field average per round
+
+### Tournament Performance
+- **pos**: Final position in tournament
+- **n_rounds**: Number of rounds played in tournament
+- **made_cut**: Boolean indicating if player made the cut (1=yes, 0=no)
+- **strokes**: Total number of strokes taken
+- **hole_par**: Par score for the hole
+- **no_cut**: Tournament has no cut (1=true, 0=false)
+
+### Fantasy Scoring Categories
+Each statistic has three variants (FDP, DKP, SDP) representing different fantasy platforms:
+
+- **finish_[FDP/DKP/SDP]**: Points awarded for tournament finish position
+- **total_[FDP/DKP/SDP]**: Total fantasy points earned
+- **streak_[FDP/DKP/SDP]**: Bonus points for consecutive birdies/eagles
+- **hole_[FDP/DKP/SDP]**: Points earned per hole
+
+### Tournament Information
+- **purse**: Tournament prize money
+- **season**: PGA Tour season
+- **player_id**: Unique identifier for each player
+- **tournament_id**: Unique identifier for each tournament
+
+### Target Variable
+- **is_top_10**: Binary variable indicating if player finished in top 10 (1=yes, 0=no)
+
+### Statistical Significance
+Based on correlation analysis:
+
+Strong Predictors (|correlation| > 0.5):
+- Fantasy points finish metrics (0.83-0.89)
+- Total fantasy points (0.50-0.54)
+
+Moderate Predictors (0.3 < |correlation| < 0.5):
+- Streak and hole metrics (0.37-0.45)
+- sg_total (0.41)
+- sg_t2g (0.33)
+- pos (-0.31)
+
+Weak Predictors (|correlation| < 0.3):
+- Individual strokes gained metrics
+- Tournament characteristics
+- Player characteristics
+- Temporal features
+
 ## Output
 The script generates:
 - List of recent tournament winners
