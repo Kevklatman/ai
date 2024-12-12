@@ -39,6 +39,13 @@ Weak Predictors (|correlation| < 0.3):
 - Player characteristics
 - Temporal features
 
+### 2. Data Preprocessing (2_data_preprocessing.ipynb)
+#### Feature Processing
+- Load cleaned dataset
+- Split into training and testing sets (80/20)
+- Scale features using StandardScaler
+- Save processed datasets for modeling
+
 ### Next Steps
 1. Feature selection based on correlation analysis
 2. Feature engineering
