@@ -58,46 +58,91 @@ def load_and_prepare_data():
     
     return X_train_scaled, X_test_scaled, y_train, y_test, feature_cols, tournament_info_test
 
-def analyze_predictions_by_tournament(tournament_info, y_pred, y_pred_proba):
-    """Analyze how many players we're predicting for top 10 in each tournament."""
+def analyze_predictions_by_tournament(tournament_info, y_pred, y_pred_proba, model, feature_cols):
+    """Analyze predictions and show which stats contributed to high probabilities."""
     # Combine predictions with tournament info
     predictions_df = pd.DataFrame({
         'tournament_id': tournament_info['tournament_id'],
         'player': tournament_info['player'],
         'date': pd.to_datetime(tournament_info['date']),
         'actual_top_10': tournament_info['is_top_10'],
-        'predicted_top_10': y_pred,
         'predicted_probability': y_pred_proba
     })
     
-    # Group by tournament and analyze predictions
-    tournament_analysis = predictions_df.groupby('tournament_id').agg({
-        'player': 'count',  # Total players
-        'actual_top_10': 'sum',  # Actual number of top 10s
-        'predicted_top_10': 'sum'  # Predicted number of top 10s
-    }).reset_index()
+    # Add threshold flags
+    thresholds = [0.7, 0.6, 0.5, 0.4, 0.3]
+    for threshold in thresholds:
+        predictions_df[f'predicted_{threshold}'] = (y_pred_proba >= threshold).astype(int)
     
-    tournament_analysis.columns = ['tournament_id', 'total_players', 'actual_top_10s', 'predicted_top_10s']
+    # Group by tournament and analyze predictions at each threshold
+    print("\nPrediction Analysis by Threshold:")
+    for threshold in thresholds:
+        n_predicted = predictions_df[f'predicted_{threshold}'].sum()
+        n_correct = ((predictions_df[f'predicted_{threshold}'] == 1) & 
+                    (predictions_df['actual_top_10'] == 1)).sum()
+        print(f"\nThreshold {threshold}:")
+        print(f"Total players predicted: {n_predicted}")
+        print(f"Correct predictions: {n_correct}")
+        print(f"Success rate: {n_correct/n_predicted*100:.1f}%")
     
-    # Print summary statistics
-    print("\nPrediction Analysis by Tournament:")
-    print(f"Number of tournaments: {len(tournament_analysis)}")
-    print(f"Average players per tournament: {tournament_analysis['total_players'].mean():.1f}")
-    print(f"Average actual top 10s: {tournament_analysis['actual_top_10s'].mean():.1f}")
-    print(f"Average predicted top 10s: {tournament_analysis['predicted_top_10s'].mean():.1f}")
+    # Analyze predictions per tournament
+    print("\nDetailed Tournament Analysis:")
+    tournament_predictions = predictions_df.groupby('tournament_id').agg({
+        'player': 'count',          # Number of players in tournament
+        'actual_top_10': 'sum',     # Number of actual top 10s (should be 10)
+        'date': 'first'             # Tournament date
+    }).sort_values('date')
     
-    # Show distribution of predicted top 10s
-    print("\nDistribution of predicted top 10s per tournament:")
-    print(tournament_analysis['predicted_top_10s'].value_counts().sort_index())
+    # Add prediction counts for each threshold
+    for threshold in thresholds:
+        col_name = f'predicted_{threshold}'
+        tournament_predictions[col_name] = \
+            predictions_df.groupby('tournament_id')[f'predicted_{threshold}'].sum()
+    
+    print("\nSample of tournament predictions:")
+    print(tournament_predictions.head().to_string())
+    
+    # Show distribution of number of predictions
+    print("\nFor each threshold, number of tournaments with X predicted players:")
+    for threshold in thresholds:
+        col_name = f'predicted_{threshold}'
+        prediction_counts = tournament_predictions[col_name].value_counts().sort_index()
+        print(f"\nThreshold {threshold}:")
+        print("Num Players Predicted    Num Tournaments")
+        print("-" * 45)
+        for n_players, n_tournaments in prediction_counts.items():
+            print(f"{n_players:>20d}    {n_tournaments:>15d}")
+    
+    # Calculate averages
+    print("\nAverage predictions per tournament:")
+    for threshold in thresholds:
+        avg_predictions = tournament_predictions[f'predicted_{threshold}'].mean()
+        print(f"Threshold {threshold}: {avg_predictions:.1f} players")
+    
+    # Get feature importance
+    feature_importance = pd.DataFrame({
+        'feature': feature_cols,
+        'importance': np.abs(model.coef_[0])
+    }).sort_values('importance', ascending=False)
+    
+    print("\nTop 5 most important features:")
+    print(feature_importance.head().to_string())
     
     # Plot distribution
-    plt.figure(figsize=(10, 6))
-    plt.hist(tournament_analysis['predicted_top_10s'], bins=20, alpha=0.5, label='Predicted')
+    plt.figure(figsize=(12, 6))
+    for threshold in thresholds:
+        counts = tournament_predictions[f'predicted_{threshold}'].value_counts().sort_index()
+        plt.plot(counts.index, counts.values, 
+                label=f'Threshold {threshold}', 
+                alpha=0.7, 
+                marker='o')
+    
     plt.axvline(x=10, color='r', linestyle='--', label='Actual Top 10')
-    plt.xlabel('Number of Players Predicted for Top 10')
+    plt.xlabel('Number of Players Predicted per Tournament')
     plt.ylabel('Number of Tournaments')
-    plt.title('Distribution of Predicted Top 10s per Tournament')
+    plt.title('How Many Tournaments Had X Players Predicted\nAt Different Thresholds')
     plt.legend()
+    plt.grid(True)
     plt.tight_layout()
     plt.savefig(os.path.join(FIGURES_DIR, 'predictions_per_tournament.png'))
     plt.close()
@@ -220,7 +265,7 @@ def main():
     model, y_pred, y_pred_proba, threshold_results = train_and_evaluate_model(X_train, X_test, y_train, y_test)
     
     # Analyze predictions by tournament
-    predictions_df = analyze_predictions_by_tournament(tournament_info_test, y_pred, y_pred_proba)
+    predictions_df = analyze_predictions_by_tournament(tournament_info_test, y_pred, y_pred_proba, model, feature_cols)
     
     # Print classification report
     print("\nClassification Report:")
