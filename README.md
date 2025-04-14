@@ -163,4 +163,4 @@ The SQLite database (*.db files) is excluded from version control to keep the re
    - Create usage instructions
    - Note potential improvements
 
-Remember: The goal is not just to build a working model, but to understand each step of the machine learning process. Take time to experiment and understand why each step is important.
+Note to self: The goal is not just to build a working model, but to understand each step of the machine learning process. Take time to experiment and understand why each step is important.
